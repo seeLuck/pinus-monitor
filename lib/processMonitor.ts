@@ -1,0 +1,103 @@
+/**
+ *Module dependencies
+ */
+
+import { exec, spawn } from 'child_process';
+import * as util from '../utils/util'
+
+
+/**
+ * get the process information by command 'ps auxw | grep serverId | grep pid'
+ *
+ * @param {Object} param
+ * @param {Function} callback
+ * @api public
+ */
+
+export function getPsInfo(param, callback)
+{
+    if (process.platform === 'win32') return;
+    var pid = param.pid;
+    var cmd = "ps auxw | grep " + pid + " | grep -v 'grep'";
+    //var cmd = "ps auxw | grep -E '.+?\\s+" + pid + "\\s+'"  ;
+    exec(cmd, function (err : any, output)
+    {
+        if (!!err)
+        {
+            if (err.code === 1)
+            {
+                console.log('the content is null!');
+            } else
+            {
+                console.error('getPsInfo failed! ' + err.stack);
+            }
+            callback(err, null);
+            return;
+        }
+        format(param, output, callback);
+    });
+};
+
+/**
+ * convert serverInfo to required format, and the callback will handle the serverInfo 
+ *
+ * @param {Object} param, contains serverId etc
+ * @param {String} data, the output if the command 'ps'
+ * @param {Function} cb
+ * @api private
+ */
+
+function format(param, data, cb)
+{
+    var time = util.formatTime(new Date());
+    var outArray = data.toString().replace(/^\s+|\s+$/g, "").split(/\s+/);
+    var outValueArray = [];
+    for (var i = 0; i < outArray.length; i++)
+    {
+        if ((!isNaN(outArray[i])))
+        {
+            outValueArray.push(outArray[i]);
+        }
+    }
+    var ps : any = {};
+    ps.time = time;
+    ps.serverId = param.serverId;
+    ps.serverType = ps.serverId.split('-')[0];
+    var pid = ps.pid = param.pid;
+    ps.cpuAvg = outValueArray[1];
+    ps.memAvg = outValueArray[2];
+    ps.vsz = outValueArray[3];
+    ps.rss = outValueArray[4];
+    outValueArray = [];
+    if (process.platform === 'darwin')
+    {
+        ps.usr = 0;
+        ps.sys = 0;
+        ps.gue = 0;
+        cb(null, ps);
+        return;
+    }
+    exec('pidstat -p ' + pid, function (err, output)
+    {
+        if (!!err)
+        {
+            console.error('the command pidstat failed! ', err.stack);
+            return;
+        }
+		var outArray = output.toString().replace(/^\s+|\s+$/g, "").split(/\s+/);
+
+        for (var i = 0; i < outArray.length; i++)
+        {
+            if ((!isNaN(outArray[i] as any)))
+            {
+                outValueArray.push(outArray[i]);
+            }
+        }
+        ps.usr = outValueArray[1];
+        ps.sys = outValueArray[2];
+        ps.gue = outValueArray[3];
+
+        cb(null, ps);
+    });
+};
+
