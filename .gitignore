@@ -1,0 +1,13 @@
+.project
+logs/
+config/
+node_modules/*
+.settings/
+**/*.svn
+*.svn
+*.sublime-project
+*.sublime-workspace
+/dist/
+/.vscode/
+/.idea/
+/package-lock.json
