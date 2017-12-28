@@ -5,6 +5,10 @@
 import { exec, spawn } from 'child_process';
 import * as util from '../utils/util'
 
+export interface PsParam {
+    pid: string,
+    serverId: string | number
+}
 
 /**
  * get the process information by command 'ps auxw | grep serverId | grep pid'
@@ -13,13 +17,12 @@ import * as util from '../utils/util'
  * @param {Function} callback
  * @api public
  */
-
-export function getPsInfo(param, callback)
+export function getPsInfo(param: PsParam, callback: Function): void
 {
     if (process.platform === 'win32') return;
-    var pid = param.pid;
-    var cmd = "ps auxw | grep " + pid + " | grep -v 'grep'";
-    //var cmd = "ps auxw | grep -E '.+?\\s+" + pid + "\\s+'"  ;
+    let pid = param.pid;
+    let cmd = "ps auxw | grep " + pid + " | grep -v 'grep'";
+    //let cmd = "ps auxw | grep -E '.+?\\s+" + pid + "\\s+'"  ;
     exec(cmd, function (err : any, output)
     {
         if (!!err)
@@ -47,23 +50,23 @@ export function getPsInfo(param, callback)
  * @api private
  */
 
-function format(param, data, cb)
+function format(param: PsParam, data: string, cb: Function)
 {
-    var time = util.formatTime(new Date());
-    var outArray = data.toString().replace(/^\s+|\s+$/g, "").split(/\s+/);
-    var outValueArray = [];
-    for (var i = 0; i < outArray.length; i++)
+    let time = util.formatTime(new Date());
+    let outArray = data.toString().replace(/^\s+|\s+$/g, "").split(/\s+/);
+    let outValueArray: Array<string> = [];
+    for (let i = 0; i < outArray.length; i++)
     {
-        if ((!isNaN(outArray[i])))
+        if ((!isNaN(<any>outArray[i])))
         {
             outValueArray.push(outArray[i]);
         }
     }
-    var ps : any = {};
+    let ps : any = {};
     ps.time = time;
     ps.serverId = param.serverId;
     ps.serverType = ps.serverId.split('-')[0];
-    var pid = ps.pid = param.pid;
+    let pid = ps.pid = param.pid;
     ps.cpuAvg = outValueArray[1];
     ps.memAvg = outValueArray[2];
     ps.vsz = outValueArray[3];
@@ -84,9 +87,9 @@ function format(param, data, cb)
             console.error('the command pidstat failed! ', err.stack);
             return;
         }
-		var outArray = output.toString().replace(/^\s+|\s+$/g, "").split(/\s+/);
+		let outArray = output.toString().replace(/^\s+|\s+$/g, "").split(/\s+/);
 
-        for (var i = 0; i < outArray.length; i++)
+        for (let i = 0; i < outArray.length; i++)
         {
             if ((!isNaN(outArray[i] as any)))
             {

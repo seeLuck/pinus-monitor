@@ -6,7 +6,7 @@ import * as os from 'os'
 import * as util from '../utils/util'
 import { exec } from 'child_process';
 
-var info : any = {};
+let info : any = {};
 
 /**
  * get information of operating-system
@@ -15,10 +15,10 @@ var info : any = {};
  * @api public
  */
 
-export function getSysInfo(callback)
+export function getSysInfo(callback: Function): void
 {
     if (process.platform === 'win32') return;
-    var reData : any = getBasicInfo();
+    let reData : any = getBasicInfo();
     exec('iostat ', function (err, output)
     {
         if (!!err)
@@ -40,14 +40,14 @@ export function getSysInfo(callback)
  * @api private
  */
 
-function format(data)
+function format(data: string)
 {
-    var time = util.formatTime(new Date());
-    var output_array = data.toString().replace(/^\s+|\s+$/g, "").split(/\s+/);
-    var output_values = [];
-    for (var i = 0, counter = 0; i < output_array.length; i++)
+    let time = util.formatTime(new Date());
+    let output_array = data.toString().replace(/^\s+|\s+$/g, "").split(/\s+/);
+    let output_values = [];
+    for (let i = 0, counter = 0; i < output_array.length; i++)
     {
-        if (!isNaN(output_array[i]))
+        if (!isNaN(<any>output_array[i]))
         {
             output_values[counter] = parseFloat(output_array[i]);
             counter++;
@@ -55,7 +55,7 @@ function format(data)
     }
     if (output_values.length > 0)
     {
-        var output_hash = {
+        let output_hash = {
             date: time,
             disk: {
                 kb_read: output_values[9],
@@ -86,8 +86,8 @@ function format(data)
 
 function getBasicInfo()
 {
-    var result = {};
-    for (var key in info)
+    let result:{[key:string]: string} = {};
+    for (let key in info)
     {
         result[key] = info[key]();
     }
